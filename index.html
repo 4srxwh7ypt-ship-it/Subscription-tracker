@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Renewal Radar</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iOS PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Renewal Radar">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Splash screen color on iOS -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22263a;
+  --border: #2e3248;
+  --accent: #6c63ff;
+  --accent2: #ff6584;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --ok: #10b981;
+  --text: #e8e9f3;
+  --muted: #7a7f9a;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── PROFILE BAR ── */
+.profile-bar {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-height: 44px;
+}
+.profile-bar::-webkit-scrollbar { display: none; }
+
+.profile-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  color: var(--muted);
+  background: transparent;
+  font-family: var(--sans);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.profile-tab.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.profile-tab:not(.active):hover { border-color: var(--border); color: var(--text); }
+
+.profile-avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.add-profile-btn {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.add-profile-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── HEADER ── */
+header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.logo-text { font-size: 17px; font-weight: 700; letter-spacing: -0.5px; }
+.logo-text span { color: var(--accent); }
+.header-right { display: flex; gap: 8px; align-items: center; }
+
+.icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  position: relative;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+.notif-dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; display: none; }
+
+.add-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-family: var(--sans); font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity 0.2s; }
+.add-btn:hover { opacity: 0.85; }
+
+/* ── STATS ── */
+.stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+.stat { background: var(--bg); padding: 14px 16px; text-align: center; }
+.stat-val { font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: -1px; }
+.stat-val.c-accent { color: var(--accent); }
+.stat-val.c-warn { color: var(--warn); }
+.stat-val.c-danger { color: var(--danger); }
+.stat-val.c-ok { color: var(--ok); }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
+
+/* ── MAIN ── */
+main { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
+
+.filters { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
+.filter-chip { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 5px 13px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: var(--sans); }
+.filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+/* ── CARDS ── */
+.sub-grid { display: flex; flex-direction: column; gap: 9px; }
+
+.sub-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 11px;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto auto;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.sub-card:hover { border-color: var(--accent); border-left-color: var(--accent); }
+.sub-card.c-urgent { border-left-color: var(--danger); }
+.sub-card.c-soon { border-left-color: var(--warn); }
+.sub-card.c-ok { border-left-color: var(--ok); }
+
+.sub-icon { width: 40px; height: 40px; border-radius: 9px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.sub-name { font-weight: 600; font-size: 14px; }
+.sub-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.sub-days { font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 3px 7px; border-radius: 5px; display: inline-block; margin-bottom: 2px; }
+.d-danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+.d-warn { background: rgba(245,158,11,0.15); color: var(--warn); }
+.d-ok { background: rgba(16,185,129,0.15); color: var(--ok); }
+.sub-date { font-size: 10px; color: var(--muted); }
+
+.price-block { text-align: right; }
+.price-main { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+.price-period-label { font-size: 10px; color: var(--muted); font-weight: 400; }
+.price-monthly { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+.price-mo-label { font-size: 10px; color: var(--muted); }
+.price-promo-badge { font-size: 9px; font-weight: 700; background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; padding: 1px 5px; vertical-align: middle; margin-left: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+.price-regular { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+.price-regular s { opacity: 0.5; }
+.price-jump-warn { font-size: 10px; color: var(--warn); margin-top: 2px; }
+
+/* ── SETTINGS ── */
+.settings-section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px; margin-top: 4px; }
+
+.theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.theme-opt {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 10px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.theme-opt:hover { border-color: var(--accent); }
+.theme-opt.sel { border-color: var(--accent); background: rgba(108,99,255,0.08); }
+.theme-preview { display: flex; gap: 3px; justify-content: center; margin-bottom: 5px; }
+.theme-dot { width: 14px; height: 14px; border-radius: 50%; }
+.theme-name { font-size: 11px; color: var(--muted); }
+
+.accent-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.accent-opt { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+.accent-opt.sel { border-color: white; transform: scale(1.2); box-shadow: 0 0 0 2px var(--border); }
+
+.currency-grid { display: flex; gap: 7px; flex-wrap: wrap; }
+.currency-opt { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 5px 13px; border-radius: 7px; cursor: pointer; font-size: 13px; font-family: var(--mono); transition: all 0.2s; }
+.currency-opt.sel { background: rgba(108,99,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+.custom-emoji-pool { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 10px; }
+.custom-emoji-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 4px 8px; font-size: 18px; display: flex; align-items: center; gap: 4px; }
+.custom-emoji-chip button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0; line-height: 1; }
+.custom-emoji-chip button:hover { color: var(--danger); }
+
+.settings-radio-group { display: flex; flex-direction: column; gap: 8px; }
+.radio-opt { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 400; }
+.radio-opt input { width: auto; accent-color: var(--accent); }
+
+body.compact .sub-card { padding: 9px 14px; }
+body.compact .sub-icon { width: 32px; height: 32px; font-size: 15px; }
+body.compact .sub-name { font-size: 13px; }
+
+.promo-toggle-row { margin-bottom: 10px; }
+.promo-toggle-label { display: flex; align-items: center; font-size: 13px; color: var(--text); cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.promo-toggle-label input { width: auto; margin-right: 4px; accent-color: var(--warn); }
+.promo-box { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.25); border-radius: 9px; padding: 14px; margin-bottom: 4px; }
+.promo-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+.card-btns { display: flex; gap: 5px; }
+.cbtn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.cbtn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+.cbtn.del:hover { background: var(--danger); border-color: var(--danger); }
+
+.empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
+.empty-state .ei { font-size: 44px; margin-bottom: 10px; }
+.empty-state h3 { font-size: 16px; margin-bottom: 6px; color: var(--text); }
+.empty-state p { font-size: 13px; }
+
+/* ── MODALS ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 460px; padding: 24px; max-height: 92vh; overflow-y: auto; }
+.modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+
+.fg { margin-bottom: 14px; }
+.fr { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 7px; font-family: var(--sans); font-size: 13px; transition: border-color 0.2s; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+select option { background: var(--surface2); }
+
+.emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-top: 5px; }
+.emoji-opt { background: var(--surface2); border: 2px solid transparent; border-radius: 7px; padding: 5px; text-align: center; font-size: 17px; cursor: pointer; transition: all 0.15s; }
+.emoji-opt:hover { border-color: var(--accent); }
+.emoji-opt.sel { border-color: var(--accent); background: rgba(108,99,255,0.15); }
+
+.modal-footer { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 9px 18px; border-radius: 7px; font-family: var(--sans); font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.btn-ghost:hover { border-color: var(--text); color: var(--text); }
+.btn-ghost.danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn-primary { background: var(--accent); border: none; color: white; padding: 9px 22px; border-radius: 7px; font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+.btn-primary:hover { opacity: 0.85; }
+
+/* Color swatches for profile */
+.color-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+.swatch.sel { border-color: white; transform: scale(1.15); }
+
+/* ── AI PANEL ── */
+.ai-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-top: 24px; overflow: hidden; }
+.ai-panel-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; transition: background 0.2s; }
+.ai-panel-header:hover { background: var(--surface2); }
+.ai-badge { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+.ai-title { font-weight: 600; font-size: 14px; flex: 1; }
+.ai-chev { color: var(--muted); transition: transform 0.3s; font-size: 11px; }
+.ai-chev.open { transform: rotate(180deg); }
+.ai-body { display: none; padding: 18px; }
+.ai-body.open { display: block; }
+.analyze-btn { background: linear-gradient(135deg, var(--accent), #8b5cf6); border: none; color: white; padding: 10px 18px; border-radius: 8px; font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; }
+.analyze-btn:hover:not(:disabled) { opacity: 0.85; }
+.analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ai-result { margin-top: 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 14px; font-size: 13px; line-height: 1.7; display: none; }
+.ai-result.vis { display: block; }
+.ai-result h4 { font-size: 11px; color: var(--accent); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px; }
+.ai-result strong { color: var(--text); }
+.ai-result ul { padding-left: 16px; color: var(--muted); }
+.ai-result li { margin-bottom: 3px; }
+
+.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── REMIND SECTION ── */
+.section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; margin-top: 24px; }
+.remind-card { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.remind-info h4 { font-size: 13px; font-weight: 600; }
+.remind-info p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.toggle-group { display: flex; gap: 6px; }
+.tog { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 5px 11px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: var(--sans); }
+.tog.on { background: rgba(108,99,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 11px 16px; font-size: 13px; z-index: 500; transform: translateY(70px); opacity: 0; transition: all 0.3s; max-width: 280px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--ok); }
+.toast.error { border-color: var(--danger); }
+.toast.info { border-color: var(--accent); }
+
+/* ── PROFILE FORM ── */
+.income-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+.income-check { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text); cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.income-check input { width: auto; accent-color: var(--accent); flex-shrink: 0; }
+
+/* ── CUSTOM FILTER ROW ── */
+.custom-filter-row { margin-bottom: 6px; }
+.custom-filter-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.custom-filter-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(108,99,255,0.12); border: 1px solid var(--accent);
+  color: var(--accent); padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; cursor: pointer; font-family: var(--sans);
+  transition: all 0.2s; white-space: nowrap;
+}
+.custom-filter-chip.active { background: var(--accent); color: white; }
+.custom-filter-chip:hover { opacity: 0.85; }
+.custom-filter-chip .cfc-del {
+  background: none; border: none; color: inherit; cursor: pointer;
+  font-size: 11px; padding: 0; line-height: 1; opacity: 0.7;
+  margin-left: 2px;
+}
+.custom-filter-chip .cfc-del:hover { opacity: 1; }
+
+.filter-builder-row { margin-bottom: 14px; }
+.filter-builder-btn {
+  background: transparent; border: 1px dashed var(--accent);
+  color: var(--accent); padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; cursor: pointer; font-family: var(--sans);
+  transition: all 0.2s;
+}
+.filter-builder-btn:hover { background: rgba(108,99,255,0.1); }
+
+/* ── FILTER BUILDER MODAL ── */
+
+
+.filter-preview {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 12px 14px; margin-bottom: 12px;
+}
+.filter-preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.filter-preview-label { font-size: 12px; font-weight: 600; color: var(--accent); }
+.filter-preview-count { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.filter-preview-items { display: flex; flex-direction: column; gap: 5px; }
+.fpi-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border);
+}
+.fpi-row:last-child { border-bottom: none; }
+.fpi-name { font-weight: 500; }
+.fpi-meta { color: var(--muted); font-size: 11px; }
+.fpi-price { font-family: var(--mono); font-size: 12px; color: var(--ok); }
+
+.filter-builder-status { font-size: 12px; color: var(--muted); min-height: 18px; margin-bottom: 4px; }
+.filter-builder-status.error { color: var(--danger); }
+.filter-builder-status.ok { color: var(--ok); }
+
+/* ── AI ASSISTANT BUTTON ── */
+.ai-assist-btn {
+  background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+  color: white; border: none; padding: 8px 14px; border-radius: 8px;
+  font-family: var(--sans); font-weight: 600; font-size: 13px;
+  cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
+}
+.ai-assist-btn:hover { opacity: 0.85; }
+
+/* ── AI ASSISTANT MODAL ── */
+.assistant-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%; max-width: 560px;
+  height: 80vh; max-height: 680px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.assistant-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+.assistant-title { display: flex; align-items: center; gap: 12px; }
+.assistant-avatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.assistant-name { font-weight: 700; font-size: 15px; }
+.assistant-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.assistant-close {
+  background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+  width: 30px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.assistant-close:hover { border-color: var(--danger); color: var(--danger); }
+
+.assistant-chat {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+
+.chat-msg { display: flex; gap: 10px; align-items: flex-start; }
+.chat-msg.user { flex-direction: row-reverse; }
+
+.chat-bubble {
+  max-width: 80%; padding: 10px 14px; border-radius: 12px;
+  font-size: 13px; line-height: 1.6;
+}
+.chat-msg.ai .chat-bubble {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+}
+.chat-msg.user .chat-bubble {
+  background: var(--accent); color: white;
+  border-bottom-right-radius: 4px;
+}
+.chat-bubble h4 { font-size: 11px; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+.chat-msg.user .chat-bubble h4 { color: rgba(255,255,255,0.7); }
+.chat-bubble ul { padding-left: 16px; margin-top: 4px; }
+.chat-bubble li { margin-bottom: 3px; }
+.chat-bubble strong { color: var(--text); }
+.chat-msg.user .chat-bubble strong { color: white; }
+
+.chat-avatar {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.chat-msg.ai .chat-avatar { background: linear-gradient(135deg, #6c63ff, #8b5cf6); }
+.chat-msg.user .chat-avatar { background: var(--surface2); border: 1px solid var(--border); }
+
+.chat-thinking {
+  display: flex; gap: 5px; align-items: center; padding: 10px 0;
+}
+.think-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); opacity: 0.4;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.think-dot:nth-child(2) { animation-delay: 0.2s; }
+.think-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
+
+/* SUGGESTIONS */
+.assistant-suggestions {
+  padding: 0 16px 8px;
+  display: flex; gap: 7px; flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.suggestion-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); padding: 5px 12px; border-radius: 16px;
+  font-size: 12px; cursor: pointer; font-family: var(--sans);
+  transition: all 0.2s; white-space: nowrap;
+}
+.suggestion-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+/* INPUT */
+.assistant-input-row {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; flex-shrink: 0;
+}
+.assistant-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 14px; border-radius: 10px;
+  font-family: var(--sans); font-size: 13px; outline: none; transition: border-color 0.2s;
+}
+.assistant-input:focus { border-color: var(--accent); }
+.assistant-send {
+  background: var(--accent); border: none; color: white;
+  width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+  font-size: 15px; display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.2s; flex-shrink: 0;
+}
+.assistant-send:hover { opacity: 0.85; }
+.assistant-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (max-width: 580px) {
+  .stats-bar { grid-template-columns: repeat(2,1fr); }
+  .sub-card { grid-template-columns: 36px 1fr auto; }
+  .card-btns, .price-main, .price-period { display: none; }
+  .fr { grid-template-columns: 1fr; }
+  .assistant-modal { height: 95vh; max-height: none; border-radius: 12px; }
+  .ai-assist-btn { padding: 8px 10px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- PROFILE BAR -->
+<div class="profile-bar" id="profileBar">
+  <!-- tabs injected by JS -->
+  <button class="add-profile-btn" onclick="openProfileModal()">+ Add Person</button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">📡</div>
+    <div class="logo-text">Renewal<span>Radar</span></div>
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" onclick="requestNotifications()" title="Enable notifications">
+      🔔<span class="notif-dot" id="notifDot"></span>
+    </button>
+    <button class="icon-btn" onclick="exportData()" title="Export all data to JSON file">💾</button>
+    <button class="icon-btn" onclick="document.getElementById('importFile').click()" title="Import data from JSON file">📂</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
+    <button class="ai-assist-btn" onclick="openAssistant()" title="AI Financial Assistant">🤖 Assistant</button>
+    <button class="add-btn" onclick="openItemModal()">+ Add Item</button>
+  </div>
+</header>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-val c-accent" id="sMonthly">$0</div><div class="stat-label">Monthly</div></div>
+  <div class="stat"><div class="stat-val c-accent" id="sAnnual">$0</div><div class="stat-label">Annual</div></div>
+  <div class="stat"><div class="stat-val c-danger" id="sDue">0</div><div class="stat-label">Due &lt;7 days</div></div>
+  <div class="stat"><div class="stat-val c-ok" id="sCount">0</div><div class="stat-label">Items</div></div>
+</div>
+
+<main>
+  <div class="filters" id="filters">
+    <button class="filter-chip active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-chip" onclick="setFilter('urgent',this)">🔴 Urgent</button>
+    <button class="filter-chip" onclick="setFilter('soon',this)">🟡 Soon</button>
+    <button class="filter-chip" onclick="setFilter('promo',this)">🏷️ Promos</button>
+    <button class="filter-chip" onclick="setFilter('subscription',this)">📦 Subscriptions</button>
+    <button class="filter-chip" onclick="setFilter('card',this)">💳 Card Fees</button>
+    <button class="filter-chip" onclick="setFilter('insurance',this)">🛡️ Insurance</button>
+    <button class="filter-chip" onclick="setFilter('other',this)">📋 Other</button>
+  </div>
+
+  <!-- CUSTOM FILTER ROW -->
+  <div class="custom-filter-row" id="customFilterRow" style="display:none">
+    <div class="custom-filter-chips" id="customFilterChips"></div>
+  </div>
+
+  <div class="filter-builder-row">
+    <button class="filter-builder-btn" onclick="openFilterBuilder()">✨ Build AI Filter</button>
+  </div>
+
+  <div class="sub-grid" id="subGrid"></div>
+
+  <p class="section-title">Reminders</p>
+  <div class="remind-card">
+    <div class="remind-info">
+      <h4>Remind me before renewals</h4>
+      <p>Browser alerts before items are due (tap 🔔 to enable)</p>
+    </div>
+    <div class="toggle-group">
+      <button class="tog" id="r7" onclick="toggleRemind(7)">7 days</button>
+      <button class="tog on" id="r3" onclick="toggleRemind(3)">3 days</button>
+      <button class="tog on" id="r1" onclick="toggleRemind(1)">1 day</button>
+    </div>
+  </div>
+
+  <div class="ai-panel">
+    <div class="ai-panel-header" onclick="toggleAI()">
+      <span class="ai-badge">AI</span>
+      <span class="ai-title">Alternatives &amp; Savings Suggestions</span>
+      <span class="ai-chev" id="aiChev">▼</span>
+    </div>
+    <div class="ai-body" id="aiBody">
+      <div class="fg">
+        <label>Analyze which item?</label>
+        <select id="aiSel">
+          <option value="all">— All items for this person —</option>
+        </select>
+      </div>
+      <button class="analyze-btn" id="analyzeBtn" onclick="runAI()">✨ Suggest alternatives &amp; savings</button>
+      <div class="ai-result" id="aiResult"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ITEM MODAL -->
+<div class="modal-overlay" id="itemModal">
+  <div class="modal">
+    <h2 id="itemModalTitle">Add Renewal Item</h2>
+    <div class="fg"><label>Name</label><input type="text" id="fName" placeholder="e.g. Netflix, Chase Sapphire fee…"/></div>
+    <div class="fr">
+      <div class="fg"><label>Amount ($)</label><input type="number" id="fAmount" min="0" step="0.01" placeholder="0.00"/></div>
+      <div class="fg"><label>Billing Period</label>
+        <select id="fPeriod">
+          <option value="monthly">Monthly</option>
+          <option value="annual">Annual</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="weekly">Weekly</option>
+          <option value="biennial">Every 2 Years</option>
+          <option value="once">One-time</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Next Renewal Date</label><input type="date" id="fDate"/></div>
+      <div class="fg"><label>Category</label>
+        <select id="fCat">
+          <option value="subscription">📦 Subscription</option>
+          <option value="card">💳 Card Fee</option>
+          <option value="insurance">🛡️ Insurance</option>
+          <option value="utility">⚡ Utility</option>
+          <option value="membership">🏷️ Membership</option>
+          <option value="software">💻 Software</option>
+          <option value="other">📋 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Icon</label><div class="emoji-grid" id="emojiGrid"></div></div>
+    <div class="fg"><label>Notes (optional)</label><textarea id="fNotes" rows="2" placeholder="e.g. shared with family, cancel if unused…"></textarea></div>
+
+    <!-- PROMO SECTION -->
+    <div class="promo-toggle-row">
+      <label class="promo-toggle-label">
+        <input type="checkbox" id="fPromoOn" onchange="togglePromoFields()"> &nbsp;This item has a temporary promo / intro rate
+      </label>
+    </div>
+    <div id="promoFields" style="display:none">
+      <div class="promo-box">
+        <div class="fr">
+          <div class="fg"><label>Promo Amount ($)</label><input type="number" id="fPromoAmount" min="0" step="0.01" placeholder="e.g. 1.99"/></div>
+          <div class="fg"><label>Promo Ends On</label><input type="date" id="fPromoEnd"/></div>
+        </div>
+        <div class="fg"><label>Regular Price After Promo ($)</label><input type="number" id="fRegularAmount" min="0" step="0.01" placeholder="e.g. 13.99"/></div>
+        <p class="promo-hint">After the promo end date, the card will automatically switch to the regular price.</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeItemModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:520px">
+    <h2 id="profileModalTitle">Add Person</h2>
+
+    <!-- BASIC -->
+    <p class="settings-section-title">Identity</p>
+    <div class="fr">
+      <div class="fg"><label>First Name</label><input type="text" id="pName" placeholder="e.g. Mac"/></div>
+      <div class="fg"><label>Last Name (optional)</label><input type="text" id="pLastName" placeholder="e.g. Smith"/></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Role in Household</label>
+        <select id="pRole">
+          <option value="primary">Primary Account Holder</option>
+          <option value="spouse">Spouse / Partner</option>
+          <option value="dependent">Dependent</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Color</label>
+        <div class="color-swatches" id="colorSwatches" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- LOCATION -->
+    <p class="settings-section-title">Location</p>
+    <div class="fr">
+      <div class="fg"><label>City</label><input type="text" id="pCity" placeholder="e.g. Gainesville"/></div>
+      <div class="fg"><label>State</label>
+        <select id="pState">
+          <option value="">— Select State —</option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option>
+          <option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option>
+          <option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+          <option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+          <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option>
+          <option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option>
+          <option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+          <option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+          <option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
+          <option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+          <option>DC</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- INCOME -->
+    <p class="settings-section-title">Income Sources <span style="font-weight:400;color:var(--muted)">(used by AI — never shared)</span></p>
+    <div class="income-grid" id="incomeGrid">
+      <label class="income-check"><input type="checkbox" id="iPension"> Pension (TMRS/PERS etc.)</label>
+      <label class="income-check"><input type="checkbox" id="iEmployed"> Employment / Salary</label>
+      <label class="income-check"><input type="checkbox" id="iSpousal"> Spousal Income</label>
+      <label class="income-check"><input type="checkbox" id="iSSI"> SSI / SSDI</label>
+      <label class="income-check"><input type="checkbox" id="iOther"> Other / Self-employed</label>
+    </div>
+    <div class="fg" style="margin-top:10px">
+      <label>Monthly Household Budget for Subscriptions (optional)</label>
+      <input type="number" id="pBudget" min="0" step="1" placeholder="e.g. 150"/>
+    </div>
+
+    <!-- PRIORITIES -->
+    <p class="settings-section-title">Priorities for AI Suggestions</p>
+    <div class="income-grid">
+      <label class="income-check"><input type="checkbox" id="priCost"> Minimize cost</label>
+      <label class="income-check"><input type="checkbox" id="priPrivacy"> Privacy-first options</label>
+      <label class="income-check"><input type="checkbox" id="priFamily"> Family-friendly</label>
+      <label class="income-check"><input type="checkbox" id="priHealth"> Health &amp; wellness</label>
+      <label class="income-check"><input type="checkbox" id="priNoCancel"> Keep all current services</label>
+    </div>
+
+    <!-- NOTES -->
+    <div class="fg" style="margin-top:14px">
+      <label>Additional Context for AI (optional)</label>
+      <textarea id="pNotes" rows="2" placeholder="e.g. Have 3 dependents, live rural, recently retired, fixed income…"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost danger" id="deleteProfileBtn" onclick="deleteProfile()" style="display:none">Delete Person</button>
+      <button class="btn-ghost" onclick="closeProfileModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="max-width:520px">
+    <h2>⚙️ Settings</h2>
+
+    <!-- THEME -->
+    <p class="settings-section-title">Color Theme</p>
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <!-- ACCENT COLOR -->
+    <p class="settings-section-title" style="margin-top:18px">Accent Color</p>
+    <div class="accent-grid" id="accentGrid"></div>
+
+    <!-- CUSTOM ACCENT -->
+    <div class="fg" style="margin-top:10px">
+      <label>Custom Accent (hex)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="color" id="customAccent" style="width:44px;height:36px;padding:2px;cursor:pointer;flex-shrink:0">
+        <input type="text" id="customAccentHex" placeholder="#6c63ff" style="flex:1">
+        <button class="btn-ghost" onclick="applyCustomAccent()" style="white-space:nowrap;padding:8px 12px">Apply</button>
+      </div>
+    </div>
+
+    <!-- APP NAME -->
+    <p class="settings-section-title" style="margin-top:18px">App Name</p>
+    <div class="fg">
+      <input type="text" id="sAppName" placeholder="Renewal Radar" maxlength="24">
+    </div>
+
+    <!-- CURRENCY -->
+    <p class="settings-section-title">Currency Symbol</p>
+    <div class="currency-grid" id="currencyGrid"></div>
+
+    <!-- EXTRA ICONS -->
+    <p class="settings-section-title" style="margin-top:18px">Add Custom Icons</p>
+    <div class="fg" style="display:flex;gap:8px">
+      <input type="text" id="customEmojiInput" placeholder="Paste emoji here e.g. 🎸 🧘 🏕️" style="flex:1">
+      <button class="btn-ghost" onclick="addCustomEmojis()" style="white-space:nowrap;padding:8px 12px">Add</button>
+    </div>
+    <div class="custom-emoji-pool" id="customEmojiPool"></div>
+
+    <!-- SORT ORDER -->
+    <p class="settings-section-title" style="margin-top:18px">Default Sort</p>
+    <div class="settings-radio-group" id="sortGroup">
+      <label class="radio-opt"><input type="radio" name="sort" value="days"> Days until renewal</label>
+      <label class="radio-opt"><input type="radio" name="sort" value="amount"> Amount (high→low)</label>
+      <label class="radio-opt"><input type="radio" name="sort" value="name"> Name (A→Z)</label>
+    </div>
+
+    <!-- COMPACT MODE -->
+    <p class="settings-section-title" style="margin-top:18px">Display</p>
+    <label class="promo-toggle-label" style="margin-bottom:10px">
+      <input type="checkbox" id="sCompact" onchange="applyCompact()"> &nbsp;Compact card view
+    </label>
+    <label class="promo-toggle-label">
+      <input type="checkbox" id="sHideZero"> &nbsp;Hide one-time items after their date
+    </label>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER BUILDER MODAL -->
+<div class="modal-overlay" id="filterBuilderModal">
+  <div class="modal" style="max-width:480px">
+    <h2>✨ AI Filter Builder</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">Describe what you want to see in plain English. The AI will build the filter for you.</p>
+
+    <div class="fg">
+      <label>What do you want to filter?</label>
+      <textarea id="filterQuery" rows="3" placeholder="e.g. Show everything over $20/month that isn't a streaming service&#10;Show all card fees and insurance&#10;Anything expiring in the next 60 days at promo price&#10;Medical or health-related expenses"></textarea>
+    </div>
+
+    <!-- PREVIEW AREA -->
+    <div class="filter-preview" id="filterPreview" style="display:none">
+      <div class="filter-preview-header">
+        <span class="filter-preview-label" id="filterPreviewLabel"></span>
+        <span class="filter-preview-count" id="filterPreviewCount"></span>
+      </div>
+      <div class="filter-preview-items" id="filterPreviewItems"></div>
+    </div>
+
+    <div class="filter-builder-status" id="filterBuilderStatus"></div>
+
+    <div class="modal-footer" style="flex-wrap:wrap;gap:8px">
+      <button class="btn-ghost" onclick="closeFilterBuilder()">Cancel</button>
+      <button class="btn-ghost" id="runFilterBtn" onclick="runFilterBuilder()">🔍 Preview Filter</button>
+      <button class="btn-primary" id="saveFilterBtn" onclick="saveCurrentFilter()" style="display:none">💾 Save Filter</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI ASSISTANT MODAL -->
+<div class="modal-overlay" id="assistantModal">
+  <div class="assistant-modal">
+    <div class="assistant-header">
+      <div class="assistant-title">
+        <div class="assistant-avatar">🤖</div>
+        <div>
+          <div class="assistant-name">Radar Assistant</div>
+          <div class="assistant-sub" id="assistantSub">Analyzing your subscriptions…</div>
+        </div>
+      </div>
+      <button class="assistant-close" onclick="closeAssistant()">✕</button>
+    </div>
+
+    <div class="assistant-chat" id="assistantChat">
+      <div class="chat-thinking" id="chatThinking">
+        <span class="think-dot"></span><span class="think-dot"></span><span class="think-dot"></span>
+      </div>
+    </div>
+
+    <div class="assistant-suggestions" id="assistantSuggestions"></div>
+
+    <div class="assistant-input-row">
+      <input type="text" id="assistantInput" class="assistant-input" placeholder="Ask anything about your subscriptions…" onkeydown="if(event.key==='Enter')sendMessage()">
+      <button class="assistant-send" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SAFE UUID ──────────────────────────────────────────────────
+function genId() {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  } catch(e) {}
+  // fallback
+  return 'id-' + Date.now() + '-' + Math.floor(Math.random() * 1e9);
+}
+
+// ── SAFE STORAGE ───────────────────────────────────────────────
+// ── STORAGE ────────────────────────────────────────────────────
+// Uses window.storage (Claude artifact persistent API) with
+// localStorage as a fallback. All reads are sync from in-memory
+// cache; writes go to persistent storage asynchronously.
+
+const STORE_KEY = 'rr_v2';
+
+const store = {
+  data: {},
+
+  get(k) {
+    return this.data[k] !== undefined ? this.data[k] : null;
+  },
+
+  set(k, v) {
+    this.data[k] = v;
+    this._persist();
+  },
+
+  _persist() {
+    const payload = JSON.stringify(this.data);
+    if (typeof window.storage !== 'undefined') {
+      window.storage.set(STORE_KEY, payload).catch(e => {
+        // Only warn on unexpected errors
+        const msg = e?.message || String(e);
+        if (!msg.includes('Invalid response') && !msg.includes('not found')) {
+          console.warn('[RR] window.storage.set failed:', e);
+        }
+        this._persistLocal(payload);
+      });
+    } else {
+      this._persistLocal(payload);
+    }
+  },
+
+  _persistLocal(payload) {
+    try { localStorage.setItem(STORE_KEY, payload); } catch(e) {}
+  },
+
+  async _load() {
+    let raw = null;
+
+    // Try window.storage first
+    if (typeof window.storage !== 'undefined') {
+      try {
+        const result = await window.storage.get(STORE_KEY);
+        if (result && result.value) raw = result.value;
+      } catch(e) {
+        // "Invalid response format" = key doesn't exist yet — not a real error
+        const msg = e?.message || String(e);
+        if (!msg.includes('Invalid response') && !msg.includes('not found') && !msg.includes('No value')) {
+          console.warn('[RR] window.storage.get unexpected error:', e);
+        }
+        // Either way, fall through to localStorage
+      }
+    }
+
+    // Fallback to localStorage
+    if (!raw) {
+      try {
+        const ls = localStorage.getItem(STORE_KEY);
+        if (ls) raw = ls;
+      } catch(e) {}
+    }
+
+    // Legacy key migration
+    if (!raw) {
+      try {
+        const legacy = localStorage.getItem('rr_store');
+        if (legacy) {
+          raw = legacy;
+          console.log('[RR] Migrated from legacy rr_store key');
+        }
+      } catch(e) {}
+    }
+
+    if (raw) {
+      try { this.data = JSON.parse(raw); } catch(e) { this.data = {}; }
+    }
+  }
+};
+
+// ── CONSTANTS ──────────────────────────────────────────────────
+const BASE_EMOJIS = ['📺','🎵','🎮','📦','💳','🛡️','⚡','💻','🏋️','📰','☁️','🔐','🚗','✈️','🏠','📱','🎬','🏥','📚','🐕','💊','🌐','🔧','🎯','🛒','💰','🎓','📷'];
+let EMOJIS = [...BASE_EMOJIS];
+const COLORS = ['#6c63ff','#f59e0b','#10b981','#ef4444','#3b82f6','#ec4899','#8b5cf6','#f97316'];
+
+const THEMES = [
+  { id:'dark',    name:'Dark',       bg:'#0f1117', surface:'#1a1d27', surface2:'#22263a', border:'#2e3248', text:'#e8e9f3', muted:'#7a7f9a' },
+  { id:'midnight',name:'Midnight',   bg:'#060a12', surface:'#0d1526', surface2:'#162038', border:'#1e2d4a', text:'#dde6f5', muted:'#6a7d9a' },
+  { id:'slate',   name:'Slate',      bg:'#0d1117', surface:'#161b22', surface2:'#1f2937', border:'#30363d', text:'#e6edf3', muted:'#6e7681' },
+  { id:'forest',  name:'Forest',     bg:'#0a110d', surface:'#131f16', surface2:'#1a2e1f', border:'#243b29', text:'#d8edd9', muted:'#6a8a6d' },
+  { id:'ocean',   name:'Ocean',      bg:'#060d14', surface:'#0d1a26', surface2:'#102338', border:'#163048', text:'#d0e8f5', muted:'#5a85a8' },
+  { id:'crimson', name:'Crimson',    bg:'#110909', surface:'#1e1010', surface2:'#2a1515', border:'#3d1f1f', text:'#f0dede', muted:'#8a6060' },
+];
+
+const ACCENT_PRESETS = ['#6c63ff','#3b82f6','#10b981','#f59e0b','#ef4444','#ec4899','#8b5cf6','#f97316','#06b6d4','#84cc16'];
+const CURRENCIES = [
+  { sym:'$', label:'$ USD' },
+  { sym:'€', label:'€ EUR' },
+  { sym:'£', label:'£ GBP' },
+  { sym:'¥', label:'¥ JPY' },
+  { sym:'₩', label:'₩ KRW' },
+  { sym:'₹', label:'₹ INR' },
+  { sym:'C$',label:'C$ CAD'},
+  { sym:'A$',label:'A$ AUD'},
+];
+
+// ── SETTINGS STATE ─────────────────────────────────────────────
+// Hydrated from storage in async init; defaults used until then
+let appSettings = {
+  themeId: 'dark',
+  accent: '#6c63ff',
+  currency: '$',
+  appName: 'Renewal Radar',
+  customEmojis: [],
+  sortOrder: 'days',
+  compact: false,
+  hideZeroAfter: false,
+};
+
+// Temp settings state (while modal is open)
+let tmpSettings = {};
+
+// ── STATE ──────────────────────────────────────────────────────
+// Declared here with empty defaults; hydrated from storage in async init at bottom
+let profiles = [];
+let currentProfileId = null;
+let activeFilter = 'all';
+let activeCustomFilterId = null;
+let savedFilters = [];
+let editItemId = null;
+let editProfileId = null;
+let remindDays = new Set([3, 1]);
+let selectedEmoji = EMOJIS[0];
+let selectedColor = COLORS[0];
+
+function persist() {
+  store.set('profiles', profiles);
+  store.set('currentProfile', currentProfileId);
+  store.set('remindDays', [...remindDays]);
+  store.set('savedFilters', savedFilters);
+}
+
+function currentProfile() {
+  return profiles.find(p => p.id === currentProfileId) || profiles[0];
+}
+
+function currentItems() {
+  return currentProfile().items || [];
+}
+
+// ── HELPERS ────────────────────────────────────────────────────
+function daysUntil(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(dateStr + 'T00:00:00');
+  return Math.round((due - today) / 86400000);
+}
+
+function toMonthly(amount, period) {
+  const m = { monthly:1, annual:1/12, quarterly:1/3, weekly:52/12, biennial:1/24, once:0 };
+  return amount * (m[period] || 1);
+}
+
+function money(n) {
+  const sym = appSettings?.currency || '$';
+  return sym + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function catLabel(cat) {
+  const m = { subscription:'📦 Subscription', card:'💳 Card Fee', insurance:'🛡️ Insurance',
+    utility:'⚡ Utility', membership:'🏷️ Membership', software:'💻 Software', other:'📋 Other' };
+  return m[cat] || cat;
+}
+
+function urg(days) {
+  if (days < 0) return 'overdue';
+  if (days <= 3) return 'urgent';
+  if (days <= 14) return 'soon';
+  return 'ok';
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+}
+
+// ── PROFILE BAR ────────────────────────────────────────────────
+function renderProfileBar() {
+  const bar = document.getElementById('profileBar');
+  const addBtn = bar.querySelector('.add-profile-btn');
+  // remove old tabs
+  bar.querySelectorAll('.profile-tab').forEach(t => t.remove());
+
+  profiles.forEach(p => {
+    const tab = document.createElement('button');
+    tab.className = 'profile-tab' + (p.id === currentProfileId ? ' active' : '');
+    tab.innerHTML = `<span class="profile-avatar" style="background:${p.color};color:#fff">${initials(p.name)}</span>${p.name}`;
+    tab.onclick = () => { currentProfileId = p.id; persist(); renderAll(); };
+    tab.ondblclick = (e) => { e.stopPropagation(); openProfileModal(p.id); };
+    bar.insertBefore(tab, addBtn);
+  });
+}
+
+// ── RENDER ─────────────────────────────────────────────────────
+function renderAll() {
+  try { renderProfileBar(); } catch(e) { console.error('[RR] renderProfileBar:', e); }
+  try { renderItems(); } catch(e) { console.error('[RR] renderItems:', e); }
+  try { renderCustomFilterChips(); } catch(e) { console.error('[RR] renderCustomFilterChips:', e); }
+  try { updateAISelect(); } catch(e) { console.error('[RR] updateAISelect:', e); }
+  try { updateRemindUI(); } catch(e) { console.error('[RR] updateRemindUI:', e); }
+  try { updateVAButton(); } catch(e) { console.error('[RR] updateVAButton:', e); }
+}
+
+function renderItems() {
+  const grid = document.getElementById('subGrid');
+  let items = currentItems();
+
+  let filtered = items.filter(item => {
+    if (appSettings.hideZeroAfter && item.period === 'once' && daysUntil(item.date) < 0) return false;
+    if (activeFilter === '__custom__' && activeCustomFilterId) {
+      const cf = savedFilters.find(f => f.id === activeCustomFilterId);
+      return cf ? applyFilterRules([item], cf.rules).length > 0 : true;
+    }
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'urgent') return daysUntil(item.date) <= 7;
+    if (activeFilter === 'soon') { const d = daysUntil(item.date); return d > 7 && d <= 30; }
+    if (activeFilter === 'promo') return item.promoOn && item.promoEnd && daysUntil(item.promoEnd) >= 0;
+    return item.category === activeFilter;
+  });
+
+  filtered = sortItems(filtered);
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="ei">📡</div>
+      <h3>${items.length ? 'No items match this filter' : 'Nothing on radar yet'}</h3>
+      <p>${items.length ? 'Try a different filter.' : 'Add subscriptions, card fees, and renewals to start tracking.'}</p>
+    </div>`;
+  } else {
+    grid.innerHTML = filtered.map(item => {
+      const days = daysUntil(item.date);
+      const u = urg(days);
+      const cardC = (u === 'urgent' || u === 'overdue') ? 'c-urgent' : u === 'soon' ? 'c-soon' : 'c-ok';
+      const dayC = (u === 'urgent' || u === 'overdue') ? 'd-danger' : u === 'soon' ? 'd-warn' : 'd-ok';
+      let dLabel = days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d left`;
+      const dueStr = new Date(item.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const periodLabels = { monthly:'mo', annual:'yr', quarterly:'qtr', weekly:'wk', biennial:'2yr', once:'one-time' };
+      const periodShort = periodLabels[item.period] || item.period;
+
+      // ── promo logic ──
+      const promoActive = item.promoOn && item.promoEnd && daysUntil(item.promoEnd) >= 0;
+      const displayAmount = promoActive ? item.promoAmount : item.amount;
+      const mo = toMonthly(displayAmount, item.period);
+      const showMonthly = item.period !== 'monthly' && item.period !== 'once';
+
+      let promoBadge = '';
+      let promoSubline = '';
+      if (item.promoOn && item.promoEnd) {
+        const promoLeft = daysUntil(item.promoEnd);
+        const promoEndStr = new Date(item.promoEnd+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        if (promoActive) {
+          promoBadge = `<span class="price-promo-badge">Promo</span>`;
+          const jumpMo = toMonthly(item.amount, item.period);
+          const jumpLabel = showMonthly ? `${money(jumpMo)}/mo` : `${money(item.amount)}/${periodShort}`;
+          promoSubline = `<div class="price-jump-warn">↑ ${jumpLabel} after ${promoEndStr} (${promoLeft}d)</div>`;
+        } else {
+          // promo expired — show regular price, note promo ended
+          promoSubline = `<div class="price-regular">Promo ended ${promoEndStr}</div>`;
+        }
+      }
+
+      const monthlyLine = showMonthly
+        ? `<div class="price-monthly">${money(mo)}<span class="price-mo-label">/mo</span></div>`
+        : '';
+
+      return `<div class="sub-card ${cardC}">
+        <div class="sub-icon">${item.emoji}</div>
+        <div>
+          <div class="sub-name">${item.name}</div>
+          <div class="sub-meta">${catLabel(item.category)}${item.notes ? ' · '+item.notes : ''}</div>
+        </div>
+        <div>
+          <div class="sub-days ${dayC}">${dLabel}</div>
+          <div class="sub-date">${dueStr}</div>
+        </div>
+        <div class="price-block">
+          <div class="price-main">${money(displayAmount)}${promoBadge}<span class="price-period-label">/${periodShort}</span></div>
+          ${monthlyLine}
+          ${promoSubline}
+        </div>
+        <div class="card-btns">
+          <button class="cbtn" onclick="openItemModal('${item.id}')" title="Edit">✏️</button>
+          <button class="cbtn" onclick="snooze('${item.id}')" title="Snooze 1 week">😴</button>
+          <button class="cbtn del" onclick="deleteItem('${item.id}')" title="Delete">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // stats — use active (promo-aware) price
+  const allItems = currentItems();
+  const monthly = allItems.reduce((s,i) => {
+    const promoActive = i.promoOn && i.promoEnd && daysUntil(i.promoEnd) >= 0;
+    const amt = promoActive ? i.promoAmount : i.amount;
+    return s + toMonthly(amt, i.period);
+  }, 0);
+  const dueSoon = allItems.filter(i => { const d=daysUntil(i.date); return d>=0&&d<=7; }).length;
+  document.getElementById('sMonthly').textContent = money(monthly);
+  document.getElementById('sAnnual').textContent = money(monthly * 12);
+  document.getElementById('sDue').textContent = dueSoon;
+  document.getElementById('sCount').textContent = allItems.length;
+  document.getElementById('notifDot').style.display = dueSoon > 0 ? 'block' : 'none';
+}
+
+// ── FILTER ─────────────────────────────────────────────────────
+function setFilter(f, el) {
+  activeFilter = f;
+  activeCustomFilterId = null;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderCustomFilterChips();
+  renderItems();
+}
+
+// ── ITEM MODAL ─────────────────────────────────────────────────
+function openItemModal(id) {
+  editItemId = id || null;
+  document.getElementById('itemModalTitle').textContent = id ? 'Edit Item' : 'Add Renewal Item';
+
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = EMOJIS.map(e =>
+    `<div class="emoji-opt" onclick="pickEmoji(this,'${e}')" data-e="${e}">${e}</div>`
+  ).join('');
+
+  if (id) {
+    const item = currentItems().find(i => i.id === id);
+    if (!item) return;
+    document.getElementById('fName').value = item.name;
+    document.getElementById('fAmount').value = item.amount;
+    document.getElementById('fPeriod').value = item.period;
+    document.getElementById('fDate').value = item.date;
+    document.getElementById('fCat').value = item.category;
+    document.getElementById('fNotes').value = item.notes || '';
+    selectedEmoji = item.emoji;
+    const el = grid.querySelector(`[data-e="${item.emoji}"]`);
+    if (el) el.classList.add('sel');
+    // promo
+    document.getElementById('fPromoOn').checked = !!item.promoOn;
+    document.getElementById('fPromoAmount').value = item.promoAmount || '';
+    document.getElementById('fPromoEnd').value = item.promoEnd || '';
+    document.getElementById('fRegularAmount').value = item.promoOn ? item.amount : '';
+    document.getElementById('promoFields').style.display = item.promoOn ? 'block' : 'none';
+  } else {
+    document.getElementById('fName').value = '';
+    document.getElementById('fAmount').value = '';
+    document.getElementById('fPeriod').value = 'monthly';
+    const d = new Date(); d.setDate(d.getDate()+30);
+    document.getElementById('fDate').value = d.toISOString().split('T')[0];
+    document.getElementById('fCat').value = 'subscription';
+    document.getElementById('fNotes').value = '';
+    selectedEmoji = EMOJIS[0];
+    grid.querySelector('.emoji-opt').classList.add('sel');
+    // promo
+    document.getElementById('fPromoOn').checked = false;
+    document.getElementById('fPromoAmount').value = '';
+    document.getElementById('fPromoEnd').value = '';
+    document.getElementById('fRegularAmount').value = '';
+    document.getElementById('promoFields').style.display = 'none';
+  }
+  document.getElementById('itemModal').classList.add('open');
+}
+
+function closeItemModal() {
+  document.getElementById('itemModal').classList.remove('open');
+  editItemId = null;
+}
+
+function togglePromoFields() {
+  const on = document.getElementById('fPromoOn').checked;
+  document.getElementById('promoFields').style.display = on ? 'block' : 'none';
+  // When enabling promo, move whatever's in Amount to Regular Price
+  if (on) {
+    const cur = document.getElementById('fAmount').value;
+    if (cur && !document.getElementById('fRegularAmount').value) {
+      document.getElementById('fRegularAmount').value = cur;
+    }
+  }
+}
+
+function pickEmoji(el, emoji) {
+  document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedEmoji = emoji;
+}
+
+function saveItem() {
+  const name = document.getElementById('fName').value.trim();
+  const period = document.getElementById('fPeriod').value;
+  const date = document.getElementById('fDate').value;
+  const category = document.getElementById('fCat').value;
+  const notes = document.getElementById('fNotes').value.trim();
+  const promoOn = document.getElementById('fPromoOn').checked;
+
+  // With promo: "Amount" field is the regular price; promoAmount is the discounted rate
+  // Without promo: "Amount" is just the regular price
+  const regularAmountRaw = promoOn
+    ? parseFloat(document.getElementById('fRegularAmount').value)
+    : parseFloat(document.getElementById('fAmount').value);
+  const promoAmount = promoOn ? parseFloat(document.getElementById('fPromoAmount').value) : null;
+  const promoEnd = promoOn ? document.getElementById('fPromoEnd').value : null;
+
+  if (!name || isNaN(regularAmountRaw) || !date) { showToast('Name, amount, and date are required.','error'); return; }
+  if (promoOn && (isNaN(promoAmount) || !promoEnd)) { showToast('Enter a promo amount and end date.','error'); return; }
+
+  const amount = regularAmountRaw;
+
+  const prof = currentProfile();
+  if (!prof.items) prof.items = [];
+
+  const itemData = { name, amount, period, date, category, notes, emoji: selectedEmoji, promoOn, promoAmount: promoOn ? promoAmount : null, promoEnd: promoOn ? promoEnd : null };
+
+  if (editItemId) {
+    const idx = prof.items.findIndex(i => i.id === editItemId);
+    if (idx >= 0) prof.items[idx] = { ...prof.items[idx], ...itemData };
+  } else {
+    prof.items.push({ id: genId(), ...itemData });
+  }
+
+  persist();
+  renderAll();
+  closeItemModal();
+  scheduleNotifications();
+  showToast(editItemId ? 'Item updated.' : 'Item added.', 'success');
+}
+
+function deleteItem(id) {
+  if (!confirm('Remove this item?')) return;
+  const prof = currentProfile();
+  prof.items = prof.items.filter(i => i.id !== id);
+  persist();
+  renderAll();
+  showToast('Item removed.', 'info');
+}
+
+function snooze(id) {
+  const item = currentProfile().items.find(i => i.id === id);
+  if (!item) return;
+  const d = new Date(item.date+'T00:00:00');
+  d.setDate(d.getDate()+7);
+  item.date = d.toISOString().split('T')[0];
+  persist();
+  renderAll();
+  showToast('Snoozed 7 days.', 'info');
+}
+
+// ── PROFILE MODAL ──────────────────────────────────────────────
+function openProfileModal(id) {
+  editProfileId = id || null;
+  document.getElementById('profileModalTitle').textContent = id ? 'Edit Profile' : 'Add Person';
+  document.getElementById('deleteProfileBtn').style.display = (id && profiles.length > 1) ? 'block' : 'none';
+
+  const swatches = document.getElementById('colorSwatches');
+  swatches.innerHTML = COLORS.map(c =>
+    `<div class="swatch" style="background:${c}" onclick="pickColor(this,'${c}')" data-c="${c}"></div>`
+  ).join('');
+
+  const p = id ? profiles.find(pr => pr.id === id) : null;
+  const d = p || {};
+
+  // Identity
+  document.getElementById('pName').value = d.name || '';
+  document.getElementById('pLastName').value = d.lastName || '';
+  document.getElementById('pRole').value = d.role || 'primary';
+  selectedColor = d.color || COLORS[profiles.length % COLORS.length];
+
+  // Location
+  document.getElementById('pCity').value = d.city || '';
+  document.getElementById('pState').value = d.state || '';
+  // Vet status
+  // Income
+  const inc = d.incomeSources || [];  document.getElementById('iPension').checked = inc.includes('Pension');
+  document.getElementById('iEmployed').checked = inc.includes('Employment');  document.getElementById('iSpousal').checked = inc.includes('Spousal Income');
+  document.getElementById('iSSI').checked = inc.includes('SSI/SSDI');
+  document.getElementById('iOther').checked = inc.includes('Other');
+  document.getElementById('pBudget').value = d.budget || '';
+
+  // Priorities
+  const pri = d.priorities || [];
+  document.getElementById('priCost').checked = pri.includes('minimize_cost');  document.getElementById('priPrivacy').checked = pri.includes('privacy_first');
+  document.getElementById('priFamily').checked = pri.includes('family_friendly');
+  document.getElementById('priHealth').checked = pri.includes('health_wellness');
+  document.getElementById('priNoCancel').checked = pri.includes('no_cancel');
+
+  // Notes
+  document.getElementById('pNotes').value = d.notes || '';
+
+  const activeSwatch = swatches.querySelector(`[data-c="${selectedColor}"]`);
+  if (activeSwatch) activeSwatch.classList.add('sel');
+
+  document.getElementById('profileModal').classList.add('open');
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').classList.remove('open');
+  editProfileId = null;
+}
+
+function pickColor(el, color) {
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedColor = color;
+}
+
+function collectIncomeSources() {
+  const src = [];
+  ['iPension','iEmployed','iSpousal','iSSI','iOther'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.checked) src.push(el.parentElement?.textContent?.trim() || id);
+  });
+  return src;
+}
+
+function collectPriorities() {
+  const pri = [];
+  ['priCost','priPrivacy','priFamily','priHealth','priNoCancel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.checked) pri.push(id.replace('pri',''));
+  });
+  return pri;
+}
+
+// VA button — hidden since vet features removed from this app
+function updateVAButton() {
+  const btn = document.querySelector('.va-btn');
+  if (btn) btn.style.display = 'none';
+}
+
+// Profile context for AI (non-vet version)
+function buildProfileContext(prof) {
+  if (!prof) return '';
+  const parts = [];
+  if (prof.name) parts.push(`Name: ${prof.name}${prof.lastName ? ' ' + prof.lastName : ''}`);
+  if (prof.city || prof.state) parts.push(`Location: ${[prof.city, prof.state].filter(Boolean).join(', ')}`);
+  if (prof.role) parts.push(`Role: ${prof.role}`);
+  if (prof.budget) parts.push(`Monthly subscription budget: $${prof.budget}`);
+  if (prof.incomeSources?.length) parts.push(`Income sources: ${prof.incomeSources.join(', ')}`);
+  if (prof.priorities?.length) parts.push(`Priorities: ${prof.priorities.join(', ')}`);
+  if (prof.notes) parts.push(`Notes: ${prof.notes}`);
+  return parts.join('\n');
+}
+function saveProfile() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { showToast('First name is required.','error'); return; }
+
+  const profileData = {
+    name,
+    lastName: document.getElementById('pLastName').value.trim(),
+    role: document.getElementById('pRole').value,
+    color: selectedColor,
+    city: document.getElementById('pCity').value.trim(),
+    state: document.getElementById('pState').value,
+    incomeSources: collectIncomeSources(),
+    budget: parseFloat(document.getElementById('pBudget').value) || null,
+    priorities: collectPriorities(),
+    notes: document.getElementById('pNotes').value.trim(),
+  };
+
+  if (editProfileId) {
+    const idx = profiles.findIndex(pr => pr.id === editProfileId);
+    if (idx >= 0) profiles[idx] = { ...profiles[idx], ...profileData };
+  } else {
+    const newId = genId();
+    profiles.push({ id: newId, items: [], ...profileData });
+    currentProfileId = newId;
+  }
+
+  persist();
+  renderAll();
+  closeProfileModal();
+  showToast(editProfileId ? 'Profile updated.' : `${name} added.`, 'success');
+}
+
+function deleteProfile() {
+  if (profiles.length <= 1) { showToast("Can't delete the last profile.",'error'); return; }
+  if (!confirm('Delete this person and all their items?')) return;
+  profiles = profiles.filter(p => p.id !== editProfileId);
+  currentProfileId = profiles[0].id;
+  persist();
+  renderAll();
+  closeProfileModal();
+  showToast('Person removed.', 'info');
+}
+
+// ── NOTIFICATIONS ──────────────────────────────────────────────
+async function requestNotifications() {
+  if (!('Notification' in window)) { showToast('Notifications not supported.','error'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') { showToast('Notifications enabled! 🔔','success'); scheduleNotifications(); }
+  else showToast('Permission denied.','error');
+}
+
+function scheduleNotifications() {
+  try {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    currentItems().forEach(item => {
+      const days = daysUntil(item.date);
+      remindDays.forEach(r => {
+        if (days === r) {
+          new Notification(`${item.emoji} ${item.name} renews ${r===0?'today':`in ${r} day${r>1?'s':''}`}`, {
+            body: `${money(item.amount)} · ${catLabel(item.category)}`
+          });
+        }
+      });
+    });
+  } catch(e) {}
+}
+
+function toggleRemind(d) {
+  if (remindDays.has(d)) remindDays.delete(d); else remindDays.add(d);
+  persist();
+  updateRemindUI();
+}
+
+function updateRemindUI() {
+  [7,3,1].forEach(d => {
+    const el = document.getElementById('r'+d);
+    if (el) el.classList.toggle('on', remindDays.has(d));
+  });
+}
+
+// ── AI ─────────────────────────────────────────────────────────
+function toggleAI() {
+  document.getElementById('aiBody').classList.toggle('open');
+  document.getElementById('aiChev').classList.toggle('open');
+}
+
+function updateAISelect() {
+  const sel = document.getElementById('aiSel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="all">— All items for this person —</option>';
+  currentItems().forEach(item => {
+    const o = document.createElement('option');
+    o.value = item.id;
+    o.textContent = `${item.emoji} ${item.name} (${money(item.amount)}/${item.period})`;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+async function runAI() {
+  const items = currentItems();
+  if (!items.length) { showToast('Add some items first!','error'); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  const result = document.getElementById('aiResult');
+  const selVal = document.getElementById('aiSel').value;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing…';
+  result.className = 'ai-result';
+
+  let prompt;
+  if (selVal === 'all') {
+    const monthly = items.reduce((s,i) => s + toMonthly(i.amount, i.period), 0);
+    const list = items.map(i => {
+      const promoActive = i.promoOn && i.promoEnd && daysUntil(i.promoEnd) >= 0;
+      const promoNote = i.promoOn ? (promoActive ? ` [PROMO ${money(i.promoAmount)}/${i.period} until ${i.promoEnd}, then ${money(i.amount)}/${i.period}]` : ` [promo expired, now ${money(i.amount)}/${i.period}]`) : '';
+      return `- ${i.name}: ${money(i.amount)}/${i.period}${promoNote}, category: ${i.category}${i.notes ? ', notes: '+i.notes : ''}`;
+    }).join('\n');
+    prompt = `I track these recurring expenses for ${currentProfile().name} (total ~${money(monthly)}/month):\n\n${list}\n\nPlease:\n1. Identify which items may have cheaper or free alternatives\n2. Suggest specific alternatives with estimated savings\n3. Flag any red flags (duplicates, likely unused, overpriced)\n4. Give 2-3 quick wins\n\nBe practical and specific. Use clear sections.`;
+  } else {
+    const item = items.find(i => i.id === selVal);
+    prompt = `I pay ${money(item.amount)}/${item.period} for "${item.name}" (${item.category}).${item.notes?' Notes: '+item.notes:''}\n\nGive me:\n1. 3-5 specific cheaper alternatives with real product names\n2. Estimated savings for each\n3. Key tradeoffs\n4. Your top recommendation`;
+  }
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || 'No response.';
+    const html = text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^#{1,3}\s+(.+)$/gm, '<h4>$1</h4>')
+      .replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>[^]*?<\/li>)/g, '<ul>$1</ul>')
+      .replace(/\n\n/g, '</p><p>');
+    result.innerHTML = `<h4>AI Analysis — ${currentProfile().name}</h4><p>${html}</p>`;
+    result.classList.add('vis');
+  } catch(e) {
+    result.innerHTML = `<h4>Error</h4><p>Could not reach AI. Check connection.</p>`;
+    result.classList.add('vis');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✨ Suggest alternatives & savings';
+}
+
+// ── CUSTOM FILTER ENGINE ───────────────────────────────────────
+// Filter rule schema:
+// { field, op, value }
+// fields: category, amount_monthly, days_until, period, name_contains, has_promo, notes_contains
+// ops: eq, neq, gt, lt, gte, lte, contains, in
+
+function applyFilterRules(items, rules) {
+  return items.filter(item => {
+    return rules.every(rule => {
+      const promoActive = item.promoOn && item.promoEnd && daysUntil(item.promoEnd) >= 0;
+      const amt = promoActive ? item.promoAmount : item.amount;
+      const mo = toMonthly(amt, item.period);
+      const d = daysUntil(item.date);
+
+      switch(rule.field) {
+        case 'category':        return rule.op === 'eq' ? item.category === rule.value : item.category !== rule.value;
+        case 'amount_monthly':  return compareNum(mo, rule.op, rule.value);
+        case 'amount_billed':   return compareNum(amt, rule.op, rule.value);
+        case 'days_until':      return compareNum(d, rule.op, rule.value);
+        case 'period':          return rule.op === 'eq' ? item.period === rule.value : item.period !== rule.value;
+        case 'has_promo':       return rule.value === true ? (item.promoOn && daysUntil(item.promoEnd) >= 0) : !item.promoOn;
+        case 'name_contains':   return item.name.toLowerCase().includes(String(rule.value).toLowerCase());
+        case 'notes_contains':  return (item.notes||'').toLowerCase().includes(String(rule.value).toLowerCase());
+        case 'category_in':     return Array.isArray(rule.value) && rule.value.includes(item.category);
+        case 'name_any':        return Array.isArray(rule.value) && rule.value.some(v => item.name.toLowerCase().includes(v.toLowerCase()));
+        default: return true;
+      }
+    });
+  });
+}
+
+function compareNum(a, op, b) {
+  const n = parseFloat(b);
+  switch(op) {
+    case 'gt':  return a > n;
+    case 'gte': return a >= n;
+    case 'lt':  return a < n;
+    case 'lte': return a <= n;
+    case 'eq':  return a === n;
+    case 'neq': return a !== n;
+    default:    return true;
+  }
+}
+
+// ── RENDER CUSTOM FILTER CHIPS ─────────────────────────────────
+function renderCustomFilterChips() {
+  const row = document.getElementById('customFilterRow');
+  const chips = document.getElementById('customFilterChips');
+
+  if (!savedFilters.length) { row.style.display = 'none'; return; }
+  row.style.display = 'block';
+
+  chips.innerHTML = savedFilters.map(f => `
+    <div class="custom-filter-chip${activeCustomFilterId === f.id ? ' active' : ''}"
+         onclick="applyCustomFilter('${f.id}')">
+      ${f.emoji || '🔍'} ${f.name}
+      <button class="cfc-del" onclick="event.stopPropagation();deleteCustomFilter('${f.id}')" title="Delete filter">✕</button>
+    </div>`).join('');
+}
+
+function applyCustomFilter(id) {
+  if (activeCustomFilterId === id) {
+    // toggle off
+    activeCustomFilterId = null;
+    activeFilter = 'all';
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    document.querySelector('.filter-chip').classList.add('active'); // "All"
+  } else {
+    activeCustomFilterId = id;
+    activeFilter = '__custom__';
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  }
+  renderCustomFilterChips();
+  renderItems();
+}
+
+function deleteCustomFilter(id) {
+  savedFilters = savedFilters.filter(f => f.id !== id);
+  if (activeCustomFilterId === id) {
+    activeCustomFilterId = null;
+    activeFilter = 'all';
+    document.querySelector('.filter-chip').classList.add('active');
+  }
+  persist();
+  renderCustomFilterChips();
+  renderItems();
+  showToast('Filter deleted.', 'info');
+}
+
+// Patch renderItems to handle custom filters
+const _origFilterCheck = '__custom__';
+
+// ── FILTER BUILDER ─────────────────────────────────────────────
+let pendingFilter = null;
+
+
+function openFilterBuilder() {
+  pendingFilter = null;
+  document.getElementById('filterQuery').value = '';
+  document.getElementById('filterPreview').style.display = 'none';
+  document.getElementById('filterBuilderStatus').textContent = '';
+  document.getElementById('filterBuilderStatus').className = 'filter-builder-status';
+  document.getElementById('saveFilterBtn').style.display = 'none';
+  document.getElementById('filterBuilderModal').classList.add('open');
+}
+
+function closeFilterBuilder() {
+  document.getElementById('filterBuilderModal').classList.remove('open');
+}
+
+async function runFilterBuilder() {
+  const query = document.getElementById('filterQuery').value.trim();
+  if (!query) { showToast('Describe what you want to filter first.', 'error'); return; }
+
+  const btn = document.getElementById('runFilterBtn');
+  const status = document.getElementById('filterBuilderStatus');
+  btn.disabled = true;
+  btn.textContent = '⏳ Building…';
+  status.textContent = 'Asking AI to interpret your filter…';
+  status.className = 'filter-builder-status';
+  document.getElementById('filterPreview').style.display = 'none';
+  document.getElementById('saveFilterBtn').style.display = 'none';
+
+  const items = currentItems();
+  const ctx = items.length
+    ? `Available items: ${items.map(i=>`"${i.name}" (category:${i.category}, monthly:${money(toMonthly(i.amount,i.period))}, period:${i.period}, notes:"${i.notes||''}")`).join('; ')}`
+    : 'No items tracked yet.';
+
+  const prompt = `You are a filter engine for a subscription tracking app. The user wants to filter their items with this request: "${query}"
+
+${ctx}
+
+Return ONLY a valid JSON object with this exact structure — no explanation, no markdown, no backticks:
+{
+  "name": "Short filter name (max 4 words)",
+  "emoji": "single relevant emoji",
+  "description": "one sentence describing what this filter shows",
+  "rules": [
+    { "field": "FIELD", "op": "OP", "value": VALUE }
+  ]
+}
+
+Available fields and ops:
+- category: eq/neq — values: subscription, card, insurance, utility, membership, software, other
+- category_in: (no op needed) — value: array of category strings
+- amount_monthly: gt/lt/gte/lte/eq — value: number (monthly equivalent in dollars)
+- amount_billed: gt/lt/gte/lte — value: number
+- days_until: gt/lt/gte/lte — value: number of days
+- period: eq/neq — values: monthly, annual, quarterly, weekly, biennial, once
+- has_promo: eq — value: true or false
+- name_contains: (no op needed) — value: keyword string
+- name_any: (no op needed) — value: array of keyword strings to match any
+- notes_contains: (no op needed) — value: keyword string
+
+Use multiple rules for AND logic. Keep it simple — 1 to 4 rules max. Return ONLY the JSON.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    let raw = data.content?.[0]?.text || '';
+    raw = raw.replace(/```json|```/g, '').trim();
+    const filter = JSON.parse(raw);
+
+    if (!filter.rules || !Array.isArray(filter.rules)) throw new Error('Invalid filter structure');
+
+    // Preview it
+    const matched = applyFilterRules(items, filter.rules);
+    pendingFilter = { ...filter, id: genId(), rules: filter.rules };
+
+    // Show preview
+    const preview = document.getElementById('filterPreview');
+    document.getElementById('filterPreviewLabel').textContent = `${filter.emoji} ${filter.name}`;
+    document.getElementById('filterPreviewCount').textContent = `${matched.length} item${matched.length !== 1 ? 's' : ''} match`;
+
+    if (matched.length === 0) {
+      document.getElementById('filterPreviewItems').innerHTML = `<div style="font-size:12px;color:var(--muted);padding:4px 0">No current items match this filter — it will still work as items are added.</div>`;
+    } else {
+      document.getElementById('filterPreviewItems').innerHTML = matched.slice(0,6).map(i => {
+        const promoActive = i.promoOn && i.promoEnd && daysUntil(i.promoEnd) >= 0;
+        const amt = promoActive ? i.promoAmount : i.amount;
+        const mo = toMonthly(amt, i.period);
+        return `<div class="fpi-row">
+          <span class="fpi-name">${i.emoji} ${i.name}</span>
+          <span class="fpi-meta">${catLabel(i.category)}</span>
+          <span class="fpi-price">${money(mo)}/mo</span>
+        </div>`;
+      }).join('') + (matched.length > 6 ? `<div class="fpi-row"><span class="fpi-meta">…and ${matched.length - 6} more</span></div>` : '');
+    }
+
+    preview.style.display = 'block';
+    document.getElementById('saveFilterBtn').style.display = 'block';
+    status.textContent = `✓ ${filter.description}`;
+    status.className = 'filter-builder-status ok';
+  } catch(e) {
+    status.textContent = 'Could not build filter. Try rephrasing your request.';
+    status.className = 'filter-builder-status error';
+    pendingFilter = null;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔍 Preview Filter';
+}
+
+function saveCurrentFilter() {
+  if (!pendingFilter) return;
+  savedFilters.push(pendingFilter);
+  persist();
+  renderCustomFilterChips();
+  closeFilterBuilder();
+  // Apply it immediately
+  applyCustomFilter(pendingFilter.id);
+  showToast(`Filter "${pendingFilter.name}" saved.`, 'success');
+  pendingFilter = null;
+}
+
+// ── AI ASSISTANT ───────────────────────────────────────────────
+let chatHistory = [];
+let assistantBusy = false;
+
+const QUICK_SUGGESTIONS = [
+  'What can I cut right now?',
+  'Do I have any duplicates?',
+  'Which promos are expiring soon?',
+  'What\'s my biggest expense?',
+  'How can I save $50/month?',
+  'Find me a better deal on streaming',
+  'Which card fees are worth it?',
+  'What should I cancel first?',
+];
+
+function buildContextSummary() {
+  const prof = currentProfile();
+  const items = currentItems();
+
+  const profCtx = `Name: ${prof.name}${prof.city ? ", " + prof.city : ""}${prof.state ? " " + prof.state : ""}${prof.budget ? ", budget: $" + prof.budget + "/mo" : ""}`;
+
+  if (!items.length) return `${profCtx}\n\nNo subscription items tracked yet.`;
+
+  const monthly = items.reduce((s,i) => {
+    const promoActive = i.promoOn && i.promoEnd && daysUntil(i.promoEnd) >= 0;
+    const amt = promoActive ? i.promoAmount : i.amount;
+    return s + toMonthly(amt, i.period);
+  }, 0);
+
+  const urgentItems = items.filter(i => daysUntil(i.date) <= 7 && daysUntil(i.date) >= 0);
+  const promoItems = items.filter(i => i.promoOn && i.promoEnd && daysUntil(i.promoEnd) >= 0);
+  const expiredPromos = items.filter(i => i.promoOn && i.promoEnd && daysUntil(i.promoEnd) < 0);
+
+  const itemList = items.map(i => {
+    const promoActive = i.promoOn && i.promoEnd && daysUntil(i.promoEnd) >= 0;
+    const currentAmt = promoActive ? i.promoAmount : i.amount;
+    const promoNote = promoActive
+      ? ` [PROMO RATE — expires ${i.promoEnd}, will jump to ${money(i.amount)}/${i.period}]`
+      : expiredPromos.includes(i) ? ` [promo expired, now at full price ${money(i.amount)}/${i.period}]` : '';
+    return `• ${i.name}: ${money(currentAmt)}/${i.period}${promoNote} | category: ${i.category} | next renewal: ${i.date}${i.notes ? ' | notes: '+i.notes : ''}`;
+  }).join('\n');
+
+  const budgetLine = prof.budget
+    ? `\nBUDGET vs ACTUAL: Budget ${money(prof.budget)}/mo, Spending ${money(monthly)}/mo (${monthly > prof.budget ? '⚠️ OVER by '+money(monthly-prof.budget) : '✓ under by '+money(prof.budget-monthly)})`
+    : '';
+
+  const allProfiles = profiles.length > 1
+    ? `\nOTHER HOUSEHOLD PROFILES: ${profiles.filter(p=>p.id!==prof.id).map(p=>{
+        const pMonthly = (p.items||[]).reduce((s,i)=>s+toMonthly(i.amount,i.period),0);
+        return `${p.name} (${money(pMonthly)}/mo, ${(p.items||[]).length} items)`;
+      }).join(', ')}`
+    : '';
+
+  return `=== PERSON PROFILE ===
+${profCtx}
+
+=== SUBSCRIPTION DATA ===
+TOTAL MONTHLY SPEND: ${money(monthly)} (~${money(monthly*12)}/year)${budgetLine}
+TOTAL ITEMS: ${items.length}
+ITEMS DUE WITHIN 7 DAYS: ${urgentItems.length > 0 ? urgentItems.map(i=>i.name).join(', ') : 'None'}
+ACTIVE PROMOS (expiring): ${promoItems.length > 0 ? promoItems.map(i=>`${i.name} expires ${i.promoEnd}`).join(', ') : 'None'}
+${expiredPromos.length > 0 ? `EXPIRED PROMOS (now full price): ${expiredPromos.map(i=>i.name).join(', ')}` : ''}
+${allProfiles}
+
+FULL ITEM LIST:
+${itemList}`;
+}
+
+const SYSTEM_PROMPT = `You are Radar Assistant, an AI financial advisor embedded in a subscription and renewal tracking app called Renewal Radar. You are friendly, direct, and practical — like a knowledgeable friend who helps people save money without judgment.
+
+Your job is to help users:
+- Identify wasteful, duplicate, or underused subscriptions
+- Find cheaper alternatives to what they're paying for
+- Track and act on expiring promotional rates before they jump to full price
+- Understand their true monthly and annual spend
+- Make smart decisions about what to keep, pause, or cancel
+
+Rules:
+- Be conversational and concise. No walls of text.
+- Use bullet points and short paragraphs.
+- Always reference specific items from their data when possible — never give generic advice.
+- When suggesting alternatives, name real products with approximate current pricing.
+- Be honest — if something looks like good value, say so.
+- If they have expiring promos, always flag the price jump with the exact amount and date.
+- Format numbers clearly (e.g. $13.99/mo, $167.88/yr).
+- Keep responses under 300 words unless the user asks for a deep dive.`;
+
+function openAssistant() {
+  chatHistory = [];
+  document.getElementById('assistantChat').innerHTML = `
+    <div class="chat-thinking" id="chatThinking">
+      <span class="think-dot"></span><span class="think-dot"></span><span class="think-dot"></span>
+    </div>`;
+  document.getElementById('assistantSub').textContent = 'Analyzing your subscriptions…';
+  document.getElementById('assistantSuggestions').innerHTML = '';
+  document.getElementById('assistantInput').value = '';
+  document.getElementById('assistantModal').classList.add('open');
+  autoAnalyze();
+}
+
+function closeAssistant() {
+  document.getElementById('assistantModal').classList.remove('open');
+}
+
+async function autoAnalyze() {
+  const items = currentItems();
+
+  let ctx;
+  try { ctx = buildContextSummary(); } catch(e) { ctx = 'No data available.'; }
+
+  let prompt;
+  if (!items.length) {
+    prompt = SYSTEM_PROMPT + '\n\n---\n\nUser message: The user has no items tracked yet. Greet them warmly, explain what Renewal Radar helps with, and suggest 3 types of expenses they should add first (subscriptions, credit card annual fees, insurance renewals). Keep it short and encouraging.';
+  } else {
+    prompt = SYSTEM_PROMPT + `\n\nCURRENT USER DATA:\n${ctx}\n\n---\n\nUser message: Provide a proactive financial analysis. Structure your response as:\n1. A one-line summary of their situation (total spend, biggest concern)\n2. Top 2-3 action items — be specific, name the items\n3. Any promos about to expire with exact price jump amounts and dates\n4. One quick win they can do today\n\nBe direct and specific. Reference their actual item names.`;
+  }
+
+  try {
+    const response = await callAssistantAPI([{ role: 'user', content: prompt }], true);
+    chatHistory = [
+      { role: 'user', content: prompt },
+      { role: 'assistant', content: response }
+    ];
+    replaceThinkingWithMessage(response, 'ai');
+    document.getElementById('assistantSub').textContent = `${currentProfile().name}'s financial snapshot`;
+    showSuggestionChips();
+  } catch(e) {
+    console.error('[RR] autoAnalyze error:', e);
+    replaceThinkingWithMessage('Connection failed: ' + (e.message || 'unknown error') + '. Open the browser console (long-press → Inspect or Safari Web Inspector) for details.', 'ai');
+    document.getElementById('assistantSub').textContent = 'Error — see console';
+  }
+}
+
+async function sendMessage() {
+  if (assistantBusy) return;
+  const input = document.getElementById('assistantInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await submitMessage(text);
+}
+
+async function submitSuggestion(text) {
+  if (assistantBusy) return;
+  await submitMessage(text);
+}
+
+async function submitMessage(text) {
+  assistantBusy = true;
+  document.querySelector('.assistant-send').disabled = true;
+  document.getElementById('assistantSuggestions').innerHTML = '';
+
+  appendChatMessage(text, 'user');
+
+  const ctx = buildContextSummary();
+  const systemWithCtx = SYSTEM_PROMPT + `\n\nCURRENT USER DATA (always up to date):\n${ctx}`;
+
+  chatHistory.push({ role: 'user', content: text });
+
+  // Keep last 8 turns. First message gets context prepended inside callAssistantAPI.
+  const historyToSend = chatHistory.slice(-8);
+
+  const thinking = appendThinking();
+
+  try {
+    const response = await callAssistantAPI(historyToSend, false, systemWithCtx);
+    chatHistory.push({ role: 'assistant', content: response });
+    removeThinking(thinking);
+    appendChatMessage(response, 'ai');
+    showSuggestionChips();
+  } catch(e) {
+    removeThinking(thinking);
+    appendChatMessage('Error: ' + (e.message || 'unknown') + '. Try again.', 'ai');
+  }
+
+  assistantBusy = false;
+  document.querySelector('.assistant-send').disabled = false;
+}
+
+async function callAssistantAPI(messages, isAutoAnalysis, systemOverride) {
+  let messagesWithCtx;
+  if (isAutoAnalysis || !systemOverride) {
+    messagesWithCtx = messages;
+  } else {
+    messagesWithCtx = messages.map((m, i) => {
+      if (i === 0 && m.role === 'user') {
+        return { role: 'user', content: systemOverride + '\n\n---\n\nUser message: ' + m.content };
+      }
+      return m;
+    });
+  }
+
+  // Diagnostic: log what we're about to send
+  const payload = { model: 'claude-sonnet-4-6', max_tokens: 800, messages: messagesWithCtx };
+  console.log('[RR] API call — messages:', messagesWithCtx.length, '| first msg length:', messagesWithCtx[0]?.content?.length);
+
+  let resp;
+  try {
+    resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(fetchErr) {
+    console.error('[RR] fetch() threw:', fetchErr);
+    throw new Error('Network error: ' + fetchErr.message);
+  }
+
+  console.log('[RR] HTTP status:', resp.status, resp.statusText);
+
+  let data;
+  try {
+    data = await resp.json();
+  } catch(jsonErr) {
+    const raw = await resp.text().catch(()=>'(unreadable)');
+    console.error('[RR] JSON parse failed. Raw:', raw.slice(0,200));
+    throw new Error(`HTTP ${resp.status} — response not JSON: ${raw.slice(0,100)}`);
+  }
+
+  console.log('[RR] Response keys:', Object.keys(data));
+
+  if (data.error) {
+    console.error('[RR] API error object:', data.error);
+    throw new Error(`API error (${data.error.type}): ${data.error.message}`);
+  }
+
+  const text = data.content?.[0]?.text;
+  if (!text) {
+    console.error('[RR] Unexpected response shape:', JSON.stringify(data).slice(0,300));
+    throw new Error('Unexpected response shape — check console for details');
+  }
+
+  return text;
+}
+
+function appendChatMessage(text, role) {
+  const chat = document.getElementById('assistantChat');
+  const html = text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^#{1,3}\s+(.+)$/gm, '<h4>$1</h4>')
+    .replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*?)(?=<li>|$)/gs, '$1')
+    .replace(/(<li>[\s\S]*?<\/li>)+/g, match => `<ul>${match}</ul>`)
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+
+  const avatarContent = role === 'ai' ? '🤖' : '👤';
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  div.innerHTML = `
+    <div class="chat-avatar">${avatarContent}</div>
+    <div class="chat-bubble">${html}</div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function appendThinking() {
+  const chat = document.getElementById('assistantChat');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ai';
+  div.innerHTML = `<div class="chat-avatar">🤖</div>
+    <div class="chat-bubble" style="padding:12px 16px">
+      <span class="think-dot"></span><span class="think-dot"></span><span class="think-dot"></span>
+    </div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function removeThinking(el) {
+  try { el.remove(); } catch(e) {}
+}
+
+function replaceThinkingWithMessage(text, role) {
+  const chat = document.getElementById('assistantChat');
+  const thinking = document.getElementById('chatThinking');
+  if (thinking) thinking.remove();
+  appendChatMessage(text, role);
+}
+
+function showSuggestionChips() {
+  const items = currentItems();
+  const suggestions = items.length
+    ? QUICK_SUGGESTIONS.slice(0, 4)
+    : ['What should I add first?', 'What is Renewal Radar?'];
+  document.getElementById('assistantSuggestions').innerHTML = suggestions
+    .map(s => `<button class="suggestion-chip" onclick="submitSuggestion('${s.replace(/'/g,"\\'")}')">  ${s}</button>`)
+    .join('');
+}
+
+// ── EXPORT / IMPORT ────────────────────────────────────────────
+function exportData() {
+  try {
+    const payload = {
+      version: 1,
+      exported: new Date().toISOString(),
+      profiles,
+      remindDays: [...remindDays]
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `renewal-radar-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Data exported successfully.', 'success');
+  } catch(e) {
+    showToast('Export failed: ' + e.message, 'error');
+  }
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.profiles || !Array.isArray(payload.profiles)) {
+        showToast('Invalid file — not a Renewal Radar backup.', 'error');
+        return;
+      }
+      const count = payload.profiles.reduce((s, p) => s + (p.items?.length || 0), 0);
+      const msg = `Import ${payload.profiles.length} person(s) with ${count} item(s)?\n\nThis will REPLACE all current data.`;
+      if (!confirm(msg)) return;
+
+      profiles = payload.profiles;
+      if (payload.remindDays) remindDays = new Set(payload.remindDays);
+      currentProfileId = profiles[0]?.id || null;
+      persist();
+      renderAll();
+      showToast(`Imported ${payload.profiles.length} profile(s), ${count} item(s).`, 'success');
+    } catch(err) {
+      showToast('Could not read file. Is it a valid JSON backup?', 'error');
+    }
+    // reset so same file can be re-imported if needed
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────
+function openSettings() {
+  tmpSettings = JSON.parse(JSON.stringify(appSettings));
+  buildThemeGrid();
+  buildAccentGrid();
+  buildCurrencyGrid();
+  buildCustomEmojiPool();
+  document.getElementById('sAppName').value = appSettings.appName || 'Renewal Radar';
+  document.getElementById('sCompact').checked = !!appSettings.compact;
+  document.getElementById('sHideZero').checked = !!appSettings.hideZeroAfter;
+  document.querySelectorAll('input[name="sort"]').forEach(r => {
+    r.checked = r.value === (appSettings.sortOrder || 'days');
+  });
+  document.getElementById('customAccent').value = appSettings.accent || '#6c63ff';
+  document.getElementById('customAccentHex').value = appSettings.accent || '#6c63ff';
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+
+function buildThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = THEMES.map(t => `
+    <div class="theme-opt${t.id === tmpSettings.themeId ? ' sel' : ''}" onclick="pickTheme(this,'${t.id}')">
+      <div class="theme-preview">
+        <div class="theme-dot" style="background:${t.bg};border:1px solid #444"></div>
+        <div class="theme-dot" style="background:${t.surface}"></div>
+        <div class="theme-dot" style="background:${tmpSettings.accent || '#6c63ff'}"></div>
+      </div>
+      <div class="theme-name">${t.name}</div>
+    </div>`).join('');
+}
+
+function buildAccentGrid() {
+  const grid = document.getElementById('accentGrid');
+  grid.innerHTML = ACCENT_PRESETS.map(c => `
+    <div class="accent-opt${c === tmpSettings.accent ? ' sel' : ''}" style="background:${c}" onclick="pickAccent(this,'${c}')" title="${c}"></div>
+  `).join('');
+}
+
+function buildCurrencyGrid() {
+  const grid = document.getElementById('currencyGrid');
+  grid.innerHTML = CURRENCIES.map(c => `
+    <div class="currency-opt${c.sym === tmpSettings.currency ? ' sel' : ''}" onclick="pickCurrency(this,'${c.sym}')">${c.label}</div>
+  `).join('');
+}
+
+function buildCustomEmojiPool() {
+  const pool = document.getElementById('customEmojiPool');
+  const custom = tmpSettings.customEmojis || [];
+  pool.innerHTML = custom.length
+    ? custom.map(e => `<div class="custom-emoji-chip">${e}<button onclick="removeCustomEmoji('${e}')">✕</button></div>`).join('')
+    : '<span style="font-size:11px;color:var(--muted)">No custom icons yet</span>';
+}
+
+function pickTheme(el, id) {
+  document.querySelectorAll('.theme-opt').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+  tmpSettings.themeId = id;
+  // live preview
+  applyTheme(id, tmpSettings.accent);
+  buildThemeGrid();
+}
+
+function pickAccent(el, color) {
+  document.querySelectorAll('.accent-opt').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+  tmpSettings.accent = color;
+  document.getElementById('customAccent').value = color;
+  document.getElementById('customAccentHex').value = color;
+  applyTheme(tmpSettings.themeId, color);
+  buildThemeGrid();
+}
+
+function applyCustomAccent() {
+  let hex = document.getElementById('customAccentHex').value.trim();
+  if (!hex.startsWith('#')) hex = '#' + hex;
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) { showToast('Enter a valid 6-digit hex color.','error'); return; }
+  document.getElementById('customAccent').value = hex;
+  tmpSettings.accent = hex;
+  buildAccentGrid();
+  applyTheme(tmpSettings.themeId, hex);
+  buildThemeGrid();
+}
+
+function pickCurrency(el, sym) {
+  document.querySelectorAll('.currency-opt').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+  tmpSettings.currency = sym;
+}
+
+function addCustomEmojis() {
+  const raw = document.getElementById('customEmojiInput').value.trim();
+  if (!raw) return;
+  // Extract individual grapheme clusters (emojis)
+  const found = [...raw].filter(c => {
+    const cp = c.codePointAt(0);
+    return cp > 127; // non-ASCII = likely emoji or special char
+  });
+  // Use a segmenter if available, otherwise split by spaces
+  let emojis;
+  try {
+    const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+    emojis = [...seg.segment(raw)].map(s => s.segment.trim()).filter(s => s.length > 0);
+  } catch(e) {
+    emojis = raw.split(/\s+/).filter(s => s.length > 0);
+  }
+  const existing = tmpSettings.customEmojis || [];
+  const newOnes = emojis.filter(e => !existing.includes(e) && !BASE_EMOJIS.includes(e));
+  if (!newOnes.length) { showToast('No new icons found.','info'); return; }
+  tmpSettings.customEmojis = [...existing, ...newOnes];
+  document.getElementById('customEmojiInput').value = '';
+  buildCustomEmojiPool();
+  showToast(`Added ${newOnes.length} icon(s).`, 'success');
+}
+
+function removeCustomEmoji(e) {
+  tmpSettings.customEmojis = (tmpSettings.customEmojis || []).filter(x => x !== e);
+  buildCustomEmojiPool();
+}
+
+function applyCompact() {
+  document.body.classList.toggle('compact', document.getElementById('sCompact').checked);
+}
+
+function applyTheme(themeId, accent) {
+  const t = THEMES.find(th => th.id === themeId) || THEMES[0];
+  const root = document.documentElement;
+  root.style.setProperty('--bg', t.bg);
+  root.style.setProperty('--surface', t.surface);
+  root.style.setProperty('--surface2', t.surface2);
+  root.style.setProperty('--border', t.border);
+  root.style.setProperty('--text', t.text);
+  root.style.setProperty('--muted', t.muted);
+  root.style.setProperty('--accent', accent || '#6c63ff');
+}
+
+function applyAllSettings(s) {
+  applyTheme(s.themeId, s.accent);
+  document.body.classList.toggle('compact', !!s.compact);
+  // Update app name
+  const nameEl = document.querySelector('.logo-text');
+  if (nameEl && s.appName) {
+    const words = s.appName.trim().split(' ');
+    if (words.length >= 2) {
+      nameEl.innerHTML = words[0] + '<span>' + words.slice(1).join(' ') + '</span>';
+    } else {
+      nameEl.innerHTML = '<span>' + s.appName + '</span>';
+    }
+  }
+  // Merge custom emojis into EMOJIS pool
+  EMOJIS = [...BASE_EMOJIS, ...(s.customEmojis || [])];
+}
+
+function saveSettings() {
+  const sortVal = document.querySelector('input[name="sort"]:checked')?.value || 'days';
+  appSettings = {
+    ...tmpSettings,
+    appName: document.getElementById('sAppName').value.trim() || 'Renewal Radar',
+    sortOrder: sortVal,
+    compact: document.getElementById('sCompact').checked,
+    hideZeroAfter: document.getElementById('sHideZero').checked,
+  };
+  store.set('appSettings', appSettings);
+  applyAllSettings(appSettings);
+  renderAll();
+  closeSettings();
+  showToast('Settings saved.', 'success');
+}
+
+// ── SORT OVERRIDE ───────────────────────────────────────────────
+function sortItems(items) {
+  const order = appSettings.sortOrder || 'days';
+  return [...items].sort((a,b) => {
+    if (order === 'amount') {
+      const aAmt = a.promoOn && a.promoEnd && daysUntil(a.promoEnd) >= 0 ? a.promoAmount : a.amount;
+      const bAmt = b.promoOn && b.promoEnd && daysUntil(b.promoEnd) >= 0 ? b.promoAmount : b.amount;
+      return toMonthly(bAmt, b.period) - toMonthly(aAmt, a.period);
+    }
+    if (order === 'name') return a.name.localeCompare(b.name);
+    return daysUntil(a.date) - daysUntil(b.date);
+  });
+}
+
+// ── TOAST ──────────────────────────────────────────────────────
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  t.textContent = `${icons[type]} ${msg}`;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ── CLOSE MODALS ON OVERLAY CLICK ─────────────────────────────
+document.getElementById('itemModal').addEventListener('click', function(e){ if(e.target===this) closeItemModal(); });
+document.getElementById('profileModal').addEventListener('click', function(e){ if(e.target===this) closeProfileModal(); });
+document.getElementById('settingsModal').addEventListener('click', function(e){ if(e.target===this) closeSettings(); });
+document.getElementById('filterBuilderModal').addEventListener('click', function(e){ if(e.target===this) closeFilterBuilder(); });
+document.getElementById('assistantModal').addEventListener('click', function(e){ if(e.target===this) closeAssistant(); });
+
+// Sync color picker ↔ hex input
+document.getElementById('customAccent').addEventListener('input', function() {
+  document.getElementById('customAccentHex').value = this.value;
+  tmpSettings.accent = this.value;
+  applyTheme(tmpSettings.themeId, this.value);
+  buildThemeGrid();
+});
+
+// ── INIT ───────────────────────────────────────────────────────
+(async () => {
+  try {
+    // Load persisted data before anything renders
+    await store._load();
+  } catch(e) {
+    console.warn('[RR] store._load() failed, starting fresh:', e);
+  }
+
+  try {
+    // Re-hydrate state from store now that data is loaded
+    profiles = store.get('profiles') || profiles;
+    currentProfileId = store.get('currentProfile') || currentProfileId;
+    savedFilters = store.get('savedFilters') || [];
+    remindDays = new Set(store.get('remindDays') || [3, 1]);
+    appSettings = store.get('appSettings') || appSettings;
+    EMOJIS = [...BASE_EMOJIS, ...(appSettings.customEmojis || [])];
+  } catch(e) {
+    console.warn('[RR] State hydration failed:', e);
+  }
+
+  try {
+    // Ensure at least one profile exists
+    if (!profiles.length) {
+      const defId = genId();
+      profiles.push({ id: defId, name: 'My Profile', color: COLORS[0], items: [] });
+      currentProfileId = defId;
+      persist();
+    }
+    if (!currentProfileId || !profiles.find(p => p.id === currentProfileId)) {
+      currentProfileId = profiles[0].id;
+    }
+  } catch(e) {
+    console.warn('[RR] Profile seeding failed:', e);
+    // Hard fallback
+    const defId = 'default';
+    profiles = [{ id: defId, name: 'My Profile', color: '#6c63ff', items: [] }];
+    currentProfileId = defId;
+  }
+
+  try {
+    applyAllSettings(appSettings);
+  } catch(e) {
+    console.warn('[RR] applyAllSettings failed:', e);
+  }
+
+  try {
+    renderAll();
+  } catch(e) {
+    console.error('[RR] renderAll failed:', e);
+    // Show visible error so we can diagnose
+    document.body.insertAdjacentHTML('afterbegin',
+      `<div style="background:#ef4444;color:white;padding:10px 16px;font-size:13px;font-family:monospace;position:fixed;top:0;left:0;right:0;z-index:9999">
+        ⚠️ Render error: ${e.message} — ${e.stack?.split('\n')[1]?.trim()||''}
+      </div>`);
+  }
+
+  try {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      scheduleNotifications();
+    }
+  } catch(e) {}
+
+  console.log('[RR] Init complete. Profiles:', profiles.length,
+    '| Items:', currentProfile()?.items?.length || 0,
+    '| window.storage:', typeof window.storage !== 'undefined');
+})();
+</script>
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('[RR] Service worker registered:', reg.scope))
+      .catch(err => console.warn('[RR] Service worker failed:', err));
+  });
+}
+</script>
+</body>
+</html>
